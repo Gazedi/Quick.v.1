@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Profile Edit - Clean Transparent Form</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+  />
+  <style>
+    body {
+      background-color: #000; /* black background */
+      color: #e0e0e0; /* light gray text */
+      font-family: Arial, sans-serif;
+      margin: 0; padding: 0;
+      padding-bottom: 80px; /* space for bottom nav */
+    }
+    header {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid #333;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    header h1 {
+      font-weight: 600;
+      font-size: 1.5rem;
+    }
+    header button {
+      background: none;
+      border: none;
+      color: #aaa;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+    header button:hover {
+      color: #fff;
+    }
+    main {
+      max-width: 480px;
+      margin: 1rem auto;
+      padding: 0 1rem;
+    }
+    .profile-overview {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+    .profile-overview img {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #444;
+    }
+    .profile-text {
+      flex-grow: 1;
+    }
+    .profile-text p:first-child {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin: 0 0 0.2rem;
+    }
+    .profile-text p:last-child {
+      color: #888;
+      margin: 0;
+      font-size: 0.9rem;
+    }
+    .bio-section {
+      max-width: 480px;
+      margin: 0 auto 2rem;
+      padding: 0 1rem;
+    }
+    .bio-section h2 {
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: #888;
+      text-transform: uppercase;
+      margin-bottom: 0.3rem;
+    }
+    .bio-section p {
+      margin: 0;
+      font-size: 1rem;
+      color: #ccc;
+      line-height: 1.4;
+    }
+
+    /* Bottom Navigation */
+    nav {
+      position: fixed;
+      bottom: 0;
+      left: 0; right: 0;
+      background: #121212;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding: 0.5rem 0;
+      z-index: 50;
+    }
+    nav button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      position: relative;
+    }
+    nav button i {
+      color: #aaa;
+      font-size: 20px;
+      transition: color 0.2s ease;
+    }
+    nav button.active i {
+      color: #fff;
+    }
+    .add-btn i {
+      font-size: 28px;
+    }
+    .add-btn.active i {
+      color: #fff;
+    }
+    /* Red dot notification */
+    .red-dot {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      width: 10px;
+      height: 10px;
+      background: red;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Profile</h1>
+    <button id="settingsBtn" aria-label="Open Settings" title="Edit Profile Settings">
+      <i class="fas fa-cog"></i>
+    </button>
+  </header>
+
+  <main>
+    <div class="profile-overview">
+      <img id="profilePic" src="https://i.pravatar.cc/100?img=12" alt="Profile Picture" />
+      <div class="profile-text">
+        <p id="nameDisplay">John Doe</p>
+        <p id="usernameDisplay">@johndoe</p>
+      </div>
+    </div>
+
+    <section class="bio-section">
+      <h2>Bio</h2>
+      <p id="bioDisplay">
+        Tech enthusiast, coder, and coffee lover. Sharing my journey one post at a time.
+      </p>
+    </section>
+  </main>
+
+  <!-- Bottom Navigation -->
+  <nav>
+    <button aria-label="Home" class="active" id="homeBtn">
+      <i class="fas fa-home"></i>
+    </button>
+    <button aria-label="Search" id="searchBtn">
+      <i class="fas fa-search"></i>
+    </button>
+    <button aria-label="Add" id="addBtn" class="add-btn">
+      <i class="fas fa-plus"></i>
+    </button>
+    <button aria-label="Messages" id="messagesBtn">
+      <i class="fas fa-comment"></i>
+      <!-- Red dot for unread messages -->
+      <span id="messagesRedDot" class="red-dot" style="display:none;"></span>
+    </button>
+    <button aria-label="Profile" id="profileBtn">
+      <i class="fas fa-user"></i>
+    </button>
+  </nav>
+
+  <script>
+    // Elements for profile display
+    const settingsBtn = document.getElementById("settingsBtn");
+
+    // Open settings page on settings button click
+    settingsBtn.addEventListener("click", () => {
+      window.open("settings.html", "Settings", "width=520,height=700,resizable=yes");
+    });
+
+    // Load profile data from localStorage
+    function loadProfile() {
+      const STORAGE_KEY = "profileData";
+      const data = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {
+        name: "John Doe",
+        username: "@johndoe",
+        bio: "Tech enthusiast, coder, and coffee lover. Sharing my journey one post at a time.",
+        profilePic: "https://i.pravatar.cc/100?img=12",
+      };
+
+      document.getElementById("nameDisplay").textContent = data.name;
+      document.getElementById("usernameDisplay").textContent = data.username;
+      document.getElementById("bioDisplay").textContent = data.bio;
+      document.getElementById("profilePic").src = data.profilePic;
+    }
+
+    // Bottom nav buttons & redirects
+    const buttons = document.querySelectorAll("nav button");
+    const redirects = {
+      homeBtn: "home.html",
+      searchBtn: "search.html",
+      addBtn: "add.html",
+      messagesBtn: "message.html",
+      profileBtn: "profile.html"
+    };
+
+    buttons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        buttons.forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+
+        const url = redirects[btn.id];
+        if (url) window.location.href = url;
+      });
+    });
+
+    // Show/hide red dot on messages icon depending on unread messages in localStorage
+    function updateMessagesRedDot() {
+      const notifications = JSON.parse(localStorage.getItem("notifications")) || [];
+      // If any notification is unread, show red dot
+      const hasUnread = notifications.some(n => !n.read);
+      document.getElementById("messagesRedDot").style.display = hasUnread ? "block" : "none";
+    }
+
+    window.addEventListener("storage", (e) => {
+      if (e.key === "notifications") {
+        updateMessagesRedDot();
+      }
+    });
+
+    // Initial load
+    loadProfile();
+    updateMessagesRedDot();
+  </script>
+</body>
+</html>
