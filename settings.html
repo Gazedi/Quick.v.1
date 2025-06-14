@@ -1,0 +1,255 @@
+<!-- Paste this in settings.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Profile Edit - Settings</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
+  <style>
+    body { background-color: #000; color: #e0e0e0; font-family: Arial, sans-serif; margin: 0; padding: 0 1.5rem; }
+    header { padding: 1rem 0; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; color: #eee; }
+    header h3 { font-size: 1.75rem; font-weight: 700; margin: 0; }
+    header button { font-size: 2rem; background: none; border: none; color: #888; cursor: pointer; }
+    header button:hover { color: #fff; }
+
+    #profileDropdownBtn {
+      width: 100%; text-align: left; font-weight: 600; font-size: 1.1rem;
+      padding: 0.75rem 1rem; border: 1px solid #444; color: #ddd;
+      background: transparent; border-radius: 9999px; cursor: pointer;
+      display: flex; justify-content: space-between; align-items: center;
+      user-select: none; margin-bottom: 1rem; transition: border-color 0.25s ease;
+    }
+    #profileDropdownBtn:hover, #profileDropdownBtn[aria-expanded="true"] {
+      border-color: #3b82f6; color: #3b82f6;
+    }
+    #dropdownIcon { transition: transform 0.3s ease; }
+    #profileDropdownBtn[aria-expanded="true"] #dropdownIcon { transform: rotate(180deg); }
+
+    #profileSection {
+      overflow: hidden; max-height: 0; opacity: 0; transform: translateY(-10px);
+      transition: max-height 0.3s ease, opacity 0.3s ease, transform 0.3s ease;
+      margin-bottom: 1rem;
+    }
+    #profileSection.open {
+      max-height: 600px; opacity: 1; transform: translateY(0);
+    }
+
+    form {
+      display: flex; flex-direction: column; gap: 1.2rem;
+      max-width: 480px; margin-bottom: 2rem;
+    }
+    label { font-weight: 600; font-size: 0.9rem; margin-bottom: 0.25rem; user-select: none; color: #ccc; }
+    input[type="text"], textarea {
+      color: #eee; border: 1px solid #666; border-radius: 4px;
+      padding: 0.45rem 0.75rem; font-size: 1rem; background: transparent;
+      resize: none; transition: border-color 0.2s ease;
+    }
+    input[type="text"]:focus, textarea:focus {
+      outline: none; border-color: #3b82f6;
+    }
+
+    #profilePicInputPreview {
+      width: 80px; height: 80px; border-radius: 50%; border: 2px solid #555;
+      object-fit: cover; cursor: pointer; transition: border-color 0.2s ease;
+      user-select: none; margin-bottom: 0.25rem; align-self: center;
+    }
+    #profilePicInputPreview:hover { border-color: #3b82f6; }
+    #profilePicInput { display: none; }
+
+    .form-buttons {
+      display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 0.5rem;
+    }
+    button {
+      cursor: pointer; border-radius: 9999px; padding: 0.5rem 1.5rem;
+      font-weight: 600; font-size: 1rem; border: none; transition: background-color 0.3s ease;
+    }
+    #cancelBtn { background-color: transparent; color: #bbb; border: 1px solid #555; }
+    #cancelBtn:hover { background-color: #555; color: #eee; }
+    #saveSettingsBtn { background-color: #3b82f6; color: white; }
+    #saveSettingsBtn:hover { background-color: #2563eb; }
+
+    #usernameCooldownMsg {
+      font-size: 0.8rem; color: #fbbf24; margin-top: -0.75rem;
+      user-select: none; display: none;
+    }
+    #usernameCooldownMsg.visible { display: block; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h3>Edit Profile Settings</h3>
+    <button id="closeModalBtn"><i class="fas fa-times"></i></button>
+  </header>
+
+  <button id="profileDropdownBtn" aria-expanded="false" aria-controls="profileSection" type="button">
+    Profile <i id="dropdownIcon" class="fas fa-chevron-down"></i>
+  </button>
+
+  <form id="profileSection" autocomplete="off">
+    <label for="profilePicInput">Profile Picture</label>
+    <img id="profilePicInputPreview" src="https://i.pravatar.cc/100?img=12" alt="Profile Picture Preview" />
+    <input type="file" id="profilePicInput" accept="image/*" />
+
+    <label for="nameInput">Name</label>
+    <input type="text" id="nameInput" required autocomplete="name" />
+
+    <label for="usernameInput">Username (@userxyz)</label>
+    <input type="text" id="usernameInput" pattern="^@[a-zA-Z0-9_]{3,15}$" title="Username must start with @ and be 3-15 chars (letters, numbers, underscores)" required />
+    <p id="usernameCooldownMsg">Username can only be changed 2 times per year.</p>
+
+    <label for="bioInput">Bio</label>
+    <textarea id="bioInput" rows="3" maxlength="150" placeholder="Tell us something about yourself..."></textarea>
+
+    <div class="form-buttons">
+      <button type="button" id="cancelBtn">Cancel</button>
+      <button type="submit" id="saveSettingsBtn">Save</button>
+    </div>
+  </form>
+
+  <script>
+    const STORAGE_KEY = "profileData";
+    const USERNAME_CHANGE_KEY = "usernameChangeDates";
+
+    const closeModalBtn = document.getElementById("closeModalBtn");
+    const cancelBtn = document.getElementById("cancelBtn");
+    const profileDropdownBtn = document.getElementById("profileDropdownBtn");
+    const profileSection = document.getElementById("profileSection");
+    const dropdownIcon = document.getElementById("dropdownIcon");
+
+    const profilePicInput = document.getElementById("profilePicInput");
+    const profilePicInputPreview = document.getElementById("profilePicInputPreview");
+    const nameInput = document.getElementById("nameInput");
+    const usernameInput = document.getElementById("usernameInput");
+    const bioInput = document.getElementById("bioInput");
+    const usernameCooldownMsg = document.getElementById("usernameCooldownMsg");
+
+    function loadProfile() {
+      const data = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {
+        name: "John Doe",
+        username: "@johndoe",
+        bio: "Tech enthusiast, coder, and coffee lover.",
+        profilePic: "https://i.pravatar.cc/100?img=12"
+      };
+      nameInput.value = data.name;
+      usernameInput.value = data.username;
+      bioInput.value = data.bio;
+      profilePicInputPreview.src = data.profilePic;
+    }
+
+    function usernameChangeCountInYear() {
+      const dates = JSON.parse(localStorage.getItem(USERNAME_CHANGE_KEY)) || [];
+      const oneYearAgo = new Date();
+      oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+      return dates.filter(dateStr => new Date(dateStr) >= oneYearAgo).length;
+    }
+
+    function updateUsernameInputState() {
+      if (usernameChangeCountInYear() < 2) {
+        usernameCooldownMsg.classList.remove("visible");
+        usernameInput.disabled = false;
+      } else {
+        usernameCooldownMsg.classList.add("visible");
+        usernameInput.disabled = true;
+      }
+    }
+
+    profileDropdownBtn.addEventListener("click", () => {
+      const isOpen = profileSection.classList.contains("open");
+      profileSection.classList.toggle("open");
+      profileDropdownBtn.setAttribute("aria-expanded", !isOpen);
+      dropdownIcon.style.transform = isOpen ? "rotate(0deg)" : "rotate(180deg)";
+    });
+
+    profilePicInputPreview.addEventListener("click", () => {
+      profilePicInput.click();
+    });
+
+    function closeSettings() {
+      window.location.href = "profile.html";
+    }
+
+    closeModalBtn.addEventListener("click", closeSettings);
+    cancelBtn.addEventListener("click", closeSettings);
+
+    profileSection.addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      const newName = nameInput.value.trim();
+      const newUsername = usernameInput.value.trim();
+      const newBio = bioInput.value.trim();
+      const current = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+      const currentUsername = current.username || "@johndoe";
+
+      if (!newName) return alert("Name cannot be empty.");
+      if (!/^@[a-zA-Z0-9_]{3,15}$/.test(newUsername)) return alert("Invalid username format.");
+      if (newUsername !== currentUsername && usernameChangeCountInYear() >= 2) return alert("Username change limit reached.");
+
+      const updatedData = {
+        name: newName,
+        username: newUsername,
+        bio: newBio,
+        profilePic: profilePicInputPreview.src
+      };
+
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedData));
+      if (newUsername !== currentUsername) {
+        const changes = JSON.parse(localStorage.getItem(USERNAME_CHANGE_KEY)) || [];
+        changes.push(new Date().toISOString());
+        localStorage.setItem(USERNAME_CHANGE_KEY, JSON.stringify(changes));
+      }
+
+      alert("Profile updated successfully!");
+      closeSettings();
+    });
+
+    loadProfile();
+    updateUsernameInputState();
+  </script>
+
+  <!-- Firebase Upload Script -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBeZoxEg_j6gZ5t91d94HI6esWvDH3k1C4",
+      authDomain: "quick-bbc2a.firebaseapp.com",
+      projectId: "quick-bbc2a",
+      storageBucket: "quick-bbc2a.appspot.com",
+      messagingSenderId: "89003779488",
+      appId: "1:89003779488:web:467559072c050536f9f0c5"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const storage = getStorage(app);
+
+    const profilePicInput = document.getElementById("profilePicInput");
+    const profilePicInputPreview = document.getElementById("profilePicInputPreview");
+
+    profilePicInput.addEventListener("change", async () => {
+      const file = profilePicInput.files[0];
+      if (!file) return;
+
+      const fileRef = ref(storage, `profilePics/${Date.now()}_${file.name}`);
+      try {
+        await uploadBytes(fileRef, file);
+        const url = await getDownloadURL(fileRef);
+        profilePicInputPreview.src = url;
+
+        const data = JSON.parse(localStorage.getItem("profileData")) || {};
+        data.profilePic = url;
+        localStorage.setItem("profileData", JSON.stringify(data));
+
+        alert("✅ Profile image uploaded!");
+      } catch (err) {
+        console.error("Upload error", err);
+        alert("❌ Upload failed.");
+      }
+    });
+  </script>
+
+</body>
+</html>
