@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Notifications - Quick</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white">
+
+  <!-- Header -->
+  <header class="flex items-center justify-between px-4 py-2 bg-gray-800">
+    <a href="home.html">
+      <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15 18l-6-6 6-6" />
+      </svg>
+    </a>
+    <div class="text-2xl font-bold">
+      <span class="text-red-500">Q</span><span class="text-blue-400">uick</span>
+    </div>
+    <div style="width: 20px;"></div>
+  </header>
+
+  <!-- Notifications List -->
+  <main class="max-w-xl mx-auto mt-4 p-4 bg-gray-800 rounded shadow">
+    <ul id="notifList" class="divide-y divide-gray-700"></ul>
+    <p id="noNotifMsg" class="text-center text-gray-500 mt-10 hidden">No notifications to show.</p>
+  </main>
+
+  <script>
+    let notifications = JSON.parse(localStorage.getItem("notifications") || "[]");
+
+    const notifList = document.getElementById('notifList');
+    const noNotifMsg = document.getElementById('noNotifMsg');
+
+    function renderNotifications() {
+      notifList.innerHTML = "";
+      if (notifications.length === 0) {
+        noNotifMsg.classList.remove('hidden');
+      } else {
+        notifications.forEach(notif => {
+          const li = document.createElement('li');
+          li.className = "py-4";
+
+          li.innerHTML = `
+            <a href="message.html?id=${notif.id}" class="flex justify-between items-start hover:bg-gray-700 px-2 py-2 rounded">
+              <div>
+                <p><span class="font-bold">${notif.from}:</span> ${notif.preview}</p>
+                <time class="text-sm text-gray-400">${notif.date}</time>
+              </div>
+              ${!notif.read ? `<span class="w-2 h-2 mt-2 bg-red-600 rounded-full"></span>` : ''}
+            </a>
+          `;
+          notifList.appendChild(li);
+        });
+      }
+    }
+
+    renderNotifications();
+  </script>
+</body>
+</html>
