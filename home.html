@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Quick - Home</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link 
+    rel="stylesheet" 
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+  />
+  <style>
+    body {
+      background-color: #000;
+      color: #ddd;
+      margin: 0;
+      font-family: Arial, sans-serif;
+      padding-bottom: 80px;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 1rem;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      background-color: #121212;
+      border-bottom: 1px solid #333;
+      z-index: 100;
+      height: 50px;
+    }
+    #userProfile {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      object-fit: cover;
+      cursor: pointer;
+      border: 2px solid #444;
+      flex-shrink: 0;
+    }
+    #appName {
+      font-weight: bold;
+      font-size: 1.8rem;
+      user-select: none;
+    }
+    #appName .Q {
+      color: red;
+    }
+    #appName .uick {
+      color: #3b82f6;
+    }
+    #notificationBtn {
+      position: relative;
+      cursor: pointer;
+      font-size: 22px;
+      color: #aaa;
+      flex-shrink: 0;
+    }
+    #notificationBtn:hover {
+      color: #fff;
+    }
+    #notificationBtn.red-dot::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      width: 8px;
+      height: 8px;
+      background: red;
+      border-radius: 50%;
+      border: 1.5px solid #000;
+    }
+    nav {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: #121212;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding: 0.5rem 0;
+      z-index: 50;
+      border-top: 1px solid #333;
+    }
+    nav button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #aaa;
+      font-size: 20px;
+      transition: color 0.2s ease;
+    }
+    nav button.active, nav button:hover {
+      color: #fff;
+    }
+    nav button.add-btn {
+      font-size: 28px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <img id="userProfile" src="https://i.pravatar.cc/100?img=12" alt="User Profile" title="Profile" />
+    <div id="appName"><span class="Q">Q</span><span class="uick">uick</span></div>
+    <button id="notificationBtn" aria-label="Notifications" title="Notifications">
+      <i class="fas fa-bell"></i>
+    </button>
+  </header>
+
+  <main style="padding-top: 60px; max-width: 480px; margin: 0 auto;">
+    <p>Welcome to Quick! Your social app.</p>
+  </main>
+
+  <nav>
+    <button aria-label="Home" id="homeBtn" class="active">
+      <i class="fas fa-home"></i>
+    </button>
+    <button aria-label="Search" id="searchBtn">
+      <i class="fas fa-search"></i>
+    </button>
+    <button aria-label="Add" id="addBtn" class="add-btn">
+      <i class="fas fa-plus"></i>
+    </button>
+    <button aria-label="Messages" id="messagesBtn">
+      <i class="fas fa-comment"></i>
+    </button>
+    <button aria-label="Profile" id="profileBtn">
+      <i class="fas fa-user"></i>
+    </button>
+  </nav>
+
+  <script>
+    const notificationBtn = document.getElementById('notificationBtn');
+    let hasUnreadNotifications = true;
+
+    function updateNotificationDot() {
+      if (hasUnreadNotifications) {
+        notificationBtn.classList.add('red-dot');
+      } else {
+        notificationBtn.classList.remove('red-dot');
+      }
+    }
+
+    updateNotificationDot();
+
+    const redirects = {
+      homeBtn: 'home.html',
+      searchBtn: 'search.html',
+      addBtn: 'add.html',
+      messagesBtn: 'message.html',
+      profileBtn: 'profile.html'
+    };
+
+    const buttons = document.querySelectorAll('nav button');
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        buttons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const url = redirects[btn.id];
+        if (url) {
+          window.location.href = url;
+        }
+      });
+    });
+
+    notificationBtn.addEventListener('click', () => {
+      window.location.href = 'notification.html';
+    });
+
+    document.getElementById('userProfile').addEventListener('click', () => {
+      window.location.href = 'profile.html';
+    });
+
+    function loadUserProfilePic() {
+      const data = JSON.parse(localStorage.getItem("profileData")) || {};
+      if (data.profilePic) {
+        document.getElementById("userProfile").src = data.profilePic;
+      }
+    }
+
+    // Load profile pic on page load
+    loadUserProfilePic();
+
+    // Update profile pic live if changed in other tabs
+    window.addEventListener("storage", (event) => {
+      if (event.key === "profileData") {
+        loadUserProfilePic();
+      }
+    });
+
+    // Example: simulate reading notifications
+    setTimeout(() => {
+      hasUnreadNotifications = false;
+      updateNotificationDot();
+    }, 10000);
+  </script>
+
+</body>
+</html>
