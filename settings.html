@@ -1,4 +1,3 @@
-<!-- Paste this in settings.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -52,11 +51,19 @@
 
     #profilePicInputPreview {
       width: 80px; height: 80px; border-radius: 50%; border: 2px solid #555;
-      object-fit: cover; cursor: pointer; transition: border-color 0.2s ease;
+      object-fit: cover; cursor: default; transition: border-color 0.2s ease;
       user-select: none; margin-bottom: 0.25rem; align-self: center;
     }
     #profilePicInputPreview:hover { border-color: #3b82f6; }
-    #profilePicInput { display: none; }
+
+    #profilePicUrlInput {
+      color: #eee; border: 1px solid #666; border-radius: 4px;
+      padding: 0.45rem 0.75rem; font-size: 1rem; background: transparent;
+      transition: border-color 0.2s ease;
+    }
+    #profilePicUrlInput:focus {
+      outline: none; border-color: #3b82f6;
+    }
 
     .form-buttons {
       display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 0.5rem;
@@ -89,9 +96,11 @@
   </button>
 
   <form id="profileSection" autocomplete="off">
-    <label for="profilePicInput">Profile Picture</label>
+    <label for="profilePicInputPreview">Profile Picture</label>
     <img id="profilePicInputPreview" src="https://i.pravatar.cc/100?img=12" alt="Profile Picture Preview" />
-    <input type="file" id="profilePicInput" accept="image/*" />
+
+    <label for="profilePicUrlInput">Profile Image URL</label>
+    <input type="text" id="profilePicUrlInput" placeholder="Paste new image URL here..." autocomplete="off" />
 
     <label for="nameInput">Name</label>
     <input type="text" id="nameInput" required autocomplete="name" />
@@ -119,8 +128,8 @@
     const profileSection = document.getElementById("profileSection");
     const dropdownIcon = document.getElementById("dropdownIcon");
 
-    const profilePicInput = document.getElementById("profilePicInput");
     const profilePicInputPreview = document.getElementById("profilePicInputPreview");
+    const profilePicUrlInput = document.getElementById("profilePicUrlInput");
     const nameInput = document.getElementById("nameInput");
     const usernameInput = document.getElementById("usernameInput");
     const bioInput = document.getElementById("bioInput");
@@ -137,6 +146,9 @@
       usernameInput.value = data.username;
       bioInput.value = data.bio;
       profilePicInputPreview.src = data.profilePic;
+
+      // Do NOT prefill the URL input with saved URL (keep empty)
+      profilePicUrlInput.value = "";
     }
 
     function usernameChangeCountInYear() {
@@ -163,8 +175,16 @@
       dropdownIcon.style.transform = isOpen ? "rotate(0deg)" : "rotate(180deg)";
     });
 
-    profilePicInputPreview.addEventListener("click", () => {
-      profilePicInput.click();
+    // Update preview live as user types/pastes URL
+    profilePicUrlInput.addEventListener("input", () => {
+      const url = profilePicUrlInput.value.trim();
+      if (url) {
+        profilePicInputPreview.src = url;
+      } else {
+        // If empty, revert preview to last saved profile pic
+        const data = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        profilePicInputPreview.src = data?.profilePic || "https://i.pravatar.cc/100?img=12";
+      }
     });
 
     function closeSettings() {
@@ -180,21 +200,28 @@
       const newName = nameInput.value.trim();
       const newUsername = usernameInput.value.trim();
       const newBio = bioInput.value.trim();
+      const inputUrl = profilePicUrlInput.value.trim();
+
       const current = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
       const currentUsername = current.username || "@johndoe";
+      const currentProfilePic = current.profilePic || "https://i.pravatar.cc/100?img=12";
 
       if (!newName) return alert("Name cannot be empty.");
       if (!/^@[a-zA-Z0-9_]{3,15}$/.test(newUsername)) return alert("Invalid username format.");
       if (newUsername !== currentUsername && usernameChangeCountInYear() >= 2) return alert("Username change limit reached.");
 
+      // Use new URL if provided, otherwise keep old URL
+      const newProfilePic = inputUrl || currentProfilePic;
+
       const updatedData = {
         name: newName,
         username: newUsername,
         bio: newBio,
-        profilePic: profilePicInputPreview.src
+        profilePic: newProfilePic
       };
 
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedData));
+
       if (newUsername !== currentUsername) {
         const changes = JSON.parse(localStorage.getItem(USERNAME_CHANGE_KEY)) || [];
         changes.push(new Date().toISOString());
@@ -209,47 +236,6 @@
     updateUsernameInputState();
   </script>
 
-  <!-- Firebase Upload Script -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyBeZoxEg_j6gZ5t91d94HI6esWvDH3k1C4",
-      authDomain: "quick-bbc2a.firebaseapp.com",
-      projectId: "quick-bbc2a",
-      storageBucket: "quick-bbc2a.appspot.com",
-      messagingSenderId: "89003779488",
-      appId: "1:89003779488:web:467559072c050536f9f0c5"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const storage = getStorage(app);
-
-    const profilePicInput = document.getElementById("profilePicInput");
-    const profilePicInputPreview = document.getElementById("profilePicInputPreview");
-
-    profilePicInput.addEventListener("change", async () => {
-      const file = profilePicInput.files[0];
-      if (!file) return;
-
-      const fileRef = ref(storage, `profilePics/${Date.now()}_${file.name}`);
-      try {
-        await uploadBytes(fileRef, file);
-        const url = await getDownloadURL(fileRef);
-        profilePicInputPreview.src = url;
-
-        const data = JSON.parse(localStorage.getItem("profileData")) || {};
-        data.profilePic = url;
-        localStorage.setItem("profileData", JSON.stringify(data));
-
-        alert("✅ Profile image uploaded!");
-      } catch (err) {
-        console.error("Upload error", err);
-        alert("❌ Upload failed.");
-      }
-    });
-  </script>
-
 </body>
 </html>
+
